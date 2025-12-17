@@ -1,0 +1,77 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+def roberts_operator(img):
+    gx = np.array([[1, 0],
+                   [0, -1]])
+    gy = np.array([[0, 1],
+                   [-1, 0]])
+    ix = cv2.filter2D(img, -1, gx)
+    iy = cv2.filter2D(img, -1, gy)
+    return np.sqrt(ix*2 + iy*2)
+
+def prewitt_operator(img):
+    gx = np.array([[-1, 0, 1],
+                   [-1, 0, 1],
+                   [-1, 0, 1]])
+    gy = np.array([[-1, -1, -1],
+                   [0, 0, 0],
+                   [1, 1, 1]])
+    ix = cv2.filter2D(img, -1, gx)
+    iy = cv2.filter2D(img, -1, gy)
+    return np.sqrt(ix*2 + iy*2)
+
+def sobel_operator(img):
+    ix = cv2.Sobel(img, cv2.CV_64F, 1, 0, 3)
+    iy = cv2.Sobel(img, cv2.CV_64F, 0, 1, 3)
+    return np.sqrt(ix*2 + iy*2)
+
+def frei_chen_operator(img):
+    a = np.sqrt(2)
+    gx = np.array([[1, a, 1],
+                   [0, 0, 0],
+                   [-1, -a, -1]])
+    gy = np.array([[1, 0, -1],
+                   [a, 0, -a],
+                   [1, 0, -1]])
+    ix = cv2.filter2D(img, -1, gx)
+    iy = cv2.filter2D(img, -1, gy)
+    return np.sqrt(ix*2 + iy*2)
+
+files = ["segmen1_landscape.jpeg", "segmen2_portrait.jpeg"]
+labels = ["Segmentasi_Landscape", "Segmentasi_Portrait"]
+
+images = []
+for f in files:
+    img = cv2.imread(f, cv2.IMREAD_GRAYSCALE)
+    if img is None:
+        print("Gambar tidak ditemukan:", f)
+    images.append(img)
+
+methods = {
+    "Roberts": roberts_operator,
+    "Prewitt": prewitt_operator,
+    "Sobel": sobel_operator,
+    "Frei-Chen": frei_chen_operator
+}
+
+for method_name, method in methods.items():
+    plt.figure(figsize=(12, 3))
+    plt.suptitle(method_name, fontsize=14)
+    
+    for i, img in enumerate(images):
+        if img is None:
+            plt.subplot(1, 4, i+1)
+            plt.text(0.1, 0.5, "File missing", fontsize=12)
+            plt.axis("off")
+            continue
+
+        edge = method(img)
+        plt.subplot(1, 4, i+1)
+        plt.imshow(edge, cmap="gray")
+        plt.title(labels[i])
+        plt.axis("off")
+
+    plt.tight_layout()
+    plt.show()
